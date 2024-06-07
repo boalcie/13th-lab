@@ -1,0 +1,115 @@
+﻿@page "/todolist"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+
+<h3>TodoList</h3>
+
+
+@if (TodoItems.Count == 0)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Is Completed</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var TodoItem in TodoItems)
+			{
+				<tr>
+					<td>@TodoItem.Name</td>
+					<td>@TodoItem.Description</td>
+					<td>@TodoItem.IsCompleted</td>
+					<td><button class="btn btn-primary" @onclick="(() => EditTask(TodoItem))">Edit</button></td>
+					<td><button class="btn btn-primary" @onclick="(() => DeleteTask(TodoItem.Id))">Delete</button></td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+<button class="btn btn-primary" @onclick="AddTask">Add a new task</button>
+
+@if (ModelOpen)
+{
+	<EditForm Model="Task" OnSubmit="HandleSubmit">
+		<div>
+			<label for="name">Title</label>
+			<InputText id="name" @bind-Value="Task.Name" class="form-control" />
+		</div>
+		<div>
+			<label for="description">Description</label>
+			<InputText id="description" @bind-Value="Task.Description" class="form-control" />
+		</div>
+		<div>
+			<label for="iscompleted">Is completed</label>
+			<InputCheckbox id="iscompleted" @bind-Value="Task.IsCompleted"/>
+		</div>
+		<button type="submit" class="btn btn-primary">Save</button>
+	</EditForm>
+}
+
+@code {
+	public int Index = 2;
+	public bool ModelOpen = false;
+	public int? Id { get; set; }
+	public TodoItem Task { get; set; } = new TodoItem();
+	public List<TodoItem> TodoItems = new List<TodoItem>
+
+	{
+		new TodoItem
+		{
+			Id = 1, Name = "Math", Description = "Ex 11 p 124", IsCompleted = false
+		}
+	};
+
+	private void DeleteTask(int id)
+	{
+		var Item = TodoItems.Where(x => x.Id == id).FirstOrDefault();
+		TodoItems.Remove(Item);
+	}
+
+	private void AddTask()
+	{
+		ModelOpen = true;
+	}
+
+	private void HandleSubmit()
+	{
+		if (Id == null)
+		{
+			var Item = new TodoItem
+				{
+					Id = Index, Name = Task.Name, Description = Task.Description, IsCompleted = Task.IsCompleted
+				};
+			Index++;
+			TodoItems.Add(Item);
+		}else{
+			var Item = TodoItems.Where(x => x.Id == Id).FirstOrDefault();
+			var index = TodoItems.IndexOf(Item);
+			TodoItems[index] = new TodoItem
+			{
+					Id = Task.Id,
+					Name = Task.Name,
+					Description = Task.Description,
+					IsCompleted = Task.IsCompleted
+			};
+			Id = null;
+		}
+		ModelOpen = false;
+	}
+
+	private void EditTask(TodoItem Item)
+	{
+		ModelOpen = true;
+		Task = Item;
+		Id = Item.Id;
+	}
+}
